@@ -1,0 +1,1874 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Panel &mdash; AI Multi-Persona Career Advisor</title>
+<meta name="description" content="Ask one career question. Hear it answered by six professional perspectives.">
+
+<!-- ============================================================
+     FONTS
+=============================================================== -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,560;0,9..144,650;1,9..144,500&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+/* ============================================================
+   RESET
+=============================================================== */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{-webkit-text-size-adjust:100%;scroll-behavior:smooth;}
+img,svg{display:block;max-width:100%;}
+button,input,textarea,select{font:inherit;color:inherit;background:none;border:none;}
+button{cursor:pointer;}
+ul{list-style:none;}
+a{color:inherit;}
+::selection{background:var(--accent-soft);color:var(--accent-ink);}
+
+/* ============================================================
+   VARIABLES  (Panel design system)
+   Signature: each persona is a printed "credential card" with its
+   own ink color and a rotated file-tab index number.
+=============================================================== */
+:root{
+  --bg:#F5F3EE;
+  --bg-elevated:#FFFFFF;
+  --panel:#FFFFFF;
+  --panel-2:#EFEBE2;
+  --border:#DEDACE;
+  --border-strong:#C9C3B3;
+  --text:#211E1A;
+  --text-dim:#6B6558;
+  --text-faint:#9A947F;
+  --accent:#1F5C52;         /* deep pine — primary brand ink */
+  --accent-strong:#153E38;
+  --accent-soft:#D9E7E2;
+  --accent-ink:#0E2E28;
+  --warn:#B3401F;
+
+  --p-hr:#2A5CAA;      /* HR Manager — cobalt */
+  --p-swe:#6C4BAE;     /* Software Engineer — violet */
+  --p-prof:#1F5C52;    /* Professor — pine */
+  --p-startup:#C1601C; /* Startup Founder — burnt orange */
+  --p-counselor:#B23A6B;/* Career Counselor — plum-rose */
+  --p-recruiter:#127A8C;/* Recruiter — teal */
+
+  --radius-s:6px;
+  --radius-m:12px;
+  --radius-l:20px;
+  --shadow-s:0 1px 2px rgba(33,30,26,.06), 0 1px 1px rgba(33,30,26,.04);
+  --shadow-m:0 8px 24px rgba(33,30,26,.08), 0 2px 6px rgba(33,30,26,.05);
+  --shadow-l:0 20px 48px rgba(33,30,26,.14), 0 6px 16px rgba(33,30,26,.08);
+
+  --font-display:'Fraunces', Georgia, serif;
+  --font-body:'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono:'JetBrains Mono', 'SF Mono', monospace;
+
+  --sidebar-w:288px;
+  --topbar-h:60px;
+}
+
+body.dark{
+  --bg:#14140F;
+  --bg-elevated:#1C1C15;
+  --panel:#1C1C15;
+  --panel-2:#242419;
+  --border:#33321F;
+  --border-strong:#454328;
+  --text:#EFEAD9;
+  --text-dim:#AFA890;
+  --text-faint:#79735C;
+  --accent:#5FBFA8;
+  --accent-strong:#7FD4BE;
+  --accent-soft:#1E332D;
+  --accent-ink:#DFF4EE;
+  --warn:#E37F5C;
+
+  --p-hr:#7FA8E8;
+  --p-swe:#B4A0E8;
+  --p-prof:#5FBFA8;
+  --p-startup:#E8A468;
+  --p-counselor:#E890B4;
+  --p-recruiter:#5FCADC;
+  --shadow-m:0 8px 24px rgba(0,0,0,.35), 0 2px 6px rgba(0,0,0,.25);
+  --shadow-l:0 20px 48px rgba(0,0,0,.5), 0 6px 16px rgba(0,0,0,.3);
+}
+
+body{
+  font-family:var(--font-body);
+  background:var(--bg);
+  color:var(--text);
+  min-height:100vh;
+  transition:background .25s ease, color .25s ease;
+}
+body.dark svg.icon{filter:none;}
+
+.visually-hidden{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;}
+
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px;}
+
+/* ============================================================
+   APP SHELL
+=============================================================== */
+.app{display:flex;min-height:100vh;}
+
+/* ---------------- SIDEBAR ---------------- */
+.sidebar{
+  width:var(--sidebar-w);
+  min-width:var(--sidebar-w);
+  background:var(--panel-2);
+  border-right:1px solid var(--border);
+  display:flex;
+  flex-direction:column;
+  height:100vh;
+  position:sticky;
+  top:0;
+  transition:transform .25s ease;
+  z-index:40;
+}
+.sidebar-scroll{overflow-y:auto;flex:1;padding-bottom:16px;}
+.brand{
+  display:flex;align-items:center;gap:10px;
+  padding:20px 18px 14px;
+}
+.brand-mark{
+  width:34px;height:34px;border-radius:8px;background:var(--accent);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  box-shadow:var(--shadow-s);
+}
+.brand-mark svg{width:19px;height:19px;stroke:#fff;}
+.brand-text{line-height:1.15;}
+.brand-text .name{font-family:var(--font-display);font-weight:650;font-size:16.5px;letter-spacing:.01em;}
+.brand-text .tag{font-family:var(--font-mono);font-size:10px;color:var(--text-faint);letter-spacing:.06em;text-transform:uppercase;}
+
+.new-chat-btn{
+  margin:6px 16px 18px;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  background:var(--accent);color:#fff;
+  padding:10px 14px;border-radius:var(--radius-m);
+  font-weight:600;font-size:13.5px;
+  box-shadow:var(--shadow-s);
+  transition:transform .12s ease, box-shadow .12s ease, background .15s ease;
+}
+.new-chat-btn:hover{background:var(--accent-strong);transform:translateY(-1px);box-shadow:var(--shadow-m);}
+.new-chat-btn svg{width:15px;height:15px;stroke:#fff;}
+
+.side-section{padding:0 16px;margin-bottom:20px;}
+.side-heading{
+  font-family:var(--font-mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--text-faint);margin-bottom:9px;padding:0 2px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+
+.persona-mini{
+  display:flex;align-items:center;gap:9px;
+  padding:8px 9px;border-radius:var(--radius-s);
+  border:1px solid transparent;
+  margin-bottom:4px;
+  transition:background .12s ease, border-color .12s ease;
+  width:100%;text-align:left;
+}
+.persona-mini:hover{background:var(--panel);}
+.persona-mini.active{background:var(--panel);border-color:var(--pc);box-shadow:0 0 0 1px var(--pc) inset;}
+.persona-mini .dot{width:8px;height:8px;border-radius:50%;background:var(--pc);flex-shrink:0;}
+.persona-mini .mini-label{font-size:12.8px;font-weight:600;flex:1;}
+.persona-mini .check{width:14px;height:14px;stroke:var(--pc);opacity:0;flex-shrink:0;}
+.persona-mini.active .check{opacity:1;}
+
+.select-all-row{display:flex;gap:6px;margin-bottom:10px;}
+.chip-btn{
+  font-size:11px;font-weight:600;padding:5px 10px;border-radius:100px;
+  border:1px solid var(--border-strong);color:var(--text-dim);
+  transition:all .12s ease;
+}
+.chip-btn:hover{border-color:var(--accent);color:var(--accent);}
+.chip-btn.on{background:var(--accent);border-color:var(--accent);color:#fff;}
+
+.side-link{
+  display:flex;align-items:center;gap:9px;width:100%;text-align:left;
+  padding:8px 9px;border-radius:var(--radius-s);font-size:13px;font-weight:500;
+  color:var(--text-dim);transition:background .12s ease,color .12s ease;
+}
+.side-link:hover{background:var(--panel);color:var(--text);}
+.side-link svg{width:15px;height:15px;stroke:currentColor;flex-shrink:0;}
+
+.history-item{
+  position:relative;
+  display:block;width:100%;text-align:left;
+  padding:8px 28px 8px 9px;border-radius:var(--radius-s);
+  font-size:12.5px;color:var(--text-dim);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  transition:background .12s ease;
+}
+.history-item:hover{background:var(--panel);color:var(--text);}
+.history-item.active{background:var(--panel);color:var(--text);font-weight:600;box-shadow:0 0 0 1px var(--border-strong) inset;}
+.history-del{
+  position:absolute;right:5px;top:50%;transform:translateY(-50%);
+  width:20px;height:20px;border-radius:5px;display:flex;align-items:center;justify-content:center;
+  opacity:0;transition:opacity .12s ease, background .12s ease;
+}
+.history-item:hover .history-del{opacity:1;}
+.history-del:hover{background:var(--warn);}
+.history-del:hover svg{stroke:#fff;}
+.history-del svg{width:11px;height:11px;stroke:var(--text-faint);}
+.history-empty{font-size:12px;color:var(--text-faint);padding:6px 2px;font-style:italic;}
+
+.sidebar-footer{padding:12px 16px 16px;border-top:1px solid var(--border);}
+
+/* Sidebar collapse (mobile) */
+.sidebar-overlay{display:none;}
+.sidebar-close-btn{display:none;}
+
+/* ---------------- MAIN ---------------- */
+.main{flex:1;display:flex;flex-direction:column;min-width:0;min-height:100vh;}
+
+.topbar{
+  height:var(--topbar-h);flex-shrink:0;
+  display:flex;align-items:center;gap:12px;
+  padding:0 22px;border-bottom:1px solid var(--border);
+  background:var(--bg-elevated);position:sticky;top:0;z-index:20;
+}
+.hamburger{display:none;}
+.topbar-title{font-family:var(--font-display);font-weight:600;font-size:16px;}
+.topbar-sub{font-family:var(--font-mono);font-size:11px;color:var(--text-faint);}
+.topbar-spacer{flex:1;}
+.selected-indicator{
+  display:flex;align-items:center;gap:6px;
+  font-family:var(--font-mono);font-size:11px;color:var(--text-dim);
+  padding:6px 10px;border:1px solid var(--border);border-radius:100px;
+}
+.selected-indicator .dots{display:flex;gap:3px;}
+.selected-indicator .dots span{width:6px;height:6px;border-radius:50%;}
+.icon-btn{
+  width:36px;height:36px;border-radius:var(--radius-s);
+  display:flex;align-items:center;justify-content:center;
+  border:1px solid var(--border);color:var(--text-dim);
+  transition:all .12s ease;flex-shrink:0;
+}
+.icon-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-soft);}
+.icon-btn svg{width:17px;height:17px;stroke:currentColor;}
+
+.content{flex:1;overflow-y:auto;}
+.content-inner{max-width:1040px;margin:0 auto;padding:32px 24px 120px;}
+
+/* ---------------- WELCOME ---------------- */
+.welcome{padding:40px 0 8px;text-align:left;}
+.welcome-eyebrow{
+  font-family:var(--font-mono);font-size:11.5px;letter-spacing:.09em;text-transform:uppercase;
+  color:var(--accent);margin-bottom:14px;display:flex;align-items:center;gap:8px;
+}
+.welcome-eyebrow::before{content:'';width:20px;height:1px;background:var(--accent);}
+.welcome h1{
+  font-family:var(--font-display);font-weight:560;font-size:clamp(30px,4.4vw,46px);
+  line-height:1.08;letter-spacing:-.01em;margin-bottom:16px;max-width:15ch;
+}
+.welcome h1 em{font-style:italic;color:var(--accent);}
+.welcome p.lede{font-size:16px;color:var(--text-dim);max-width:52ch;line-height:1.6;margin-bottom:32px;}
+
+.roster{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:36px;}
+.roster-card{
+  background:var(--panel);border:1px solid var(--border);border-radius:var(--radius-m);
+  padding:13px 14px;display:flex;align-items:center;gap:10px;
+  transition:transform .12s ease, box-shadow .12s ease, border-color .12s ease;
+}
+.roster-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-s);border-color:var(--pc);}
+.roster-avatar{
+  width:36px;height:36px;border-radius:9px;background:var(--pc-soft,var(--pc));
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;position:relative;
+}
+.roster-avatar svg{width:18px;height:18px;stroke:#fff;}
+.roster-name{font-weight:700;font-size:13px;}
+.roster-role{font-size:11px;color:var(--text-faint);}
+
+.suggested-heading{
+  font-family:var(--font-mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--text-faint);margin-bottom:12px;
+}
+.suggested-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;}
+.suggested-card{
+  text-align:left;background:var(--panel);border:1px solid var(--border);
+  border-radius:var(--radius-m);padding:14px 16px;font-size:13.5px;font-weight:500;
+  transition:border-color .12s ease, transform .12s ease, box-shadow .12s ease;
+  line-height:1.45;
+}
+.suggested-card:hover{border-color:var(--accent);transform:translateY(-2px);box-shadow:var(--shadow-s);}
+.suggested-card::before{content:'\201C';font-family:var(--font-display);color:var(--accent);font-size:20px;margin-right:2px;}
+
+/* ---------------- QUESTION THREAD ---------------- */
+.qa-block{margin-bottom:40px;}
+.question-card{
+  background:var(--accent-strong);color:#fff;border-radius:var(--radius-l) var(--radius-l) var(--radius-s) var(--radius-l);
+  padding:18px 22px;max-width:72ch;margin-left:auto;margin-bottom:22px;box-shadow:var(--shadow-s);
+}
+.question-card .qmeta{font-family:var(--font-mono);font-size:10.5px;opacity:.72;margin-bottom:6px;letter-spacing:.03em;}
+.question-card p{font-size:15.5px;line-height:1.5;font-weight:500;}
+
+.responses-heading{
+  display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px;
+}
+.responses-heading h2{font-family:var(--font-display);font-size:19px;font-weight:600;}
+.responses-actions{display:flex;gap:8px;flex-wrap:wrap;}
+.small-btn{
+  font-size:12px;font-weight:600;padding:7px 13px;border-radius:100px;
+  border:1px solid var(--border-strong);color:var(--text-dim);display:flex;align-items:center;gap:6px;
+  transition:all .12s ease;
+}
+.small-btn:hover{border-color:var(--accent);color:var(--accent);}
+.small-btn.primary{background:var(--accent);border-color:var(--accent);color:#fff;}
+.small-btn.primary:hover{background:var(--accent-strong);}
+.small-btn svg{width:13px;height:13px;stroke:currentColor;}
+.small-btn:disabled{opacity:.4;cursor:not-allowed;}
+
+.response-grid{display:grid;grid-template-columns:1fr;gap:16px;}
+
+/* ---------------- PERSONA RESPONSE CARD ---------------- */
+.pcard{
+  background:var(--panel);border:1px solid var(--border);border-radius:var(--radius-l);
+  overflow:hidden;box-shadow:var(--shadow-s);border-top:3px solid var(--pc);
+  animation:cardIn .35s ease both;
+}
+@keyframes cardIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+.pcard-head{
+  display:flex;align-items:center;gap:12px;padding:16px 20px 14px;border-bottom:1px solid var(--border);
+}
+.pcard-avatar{
+  width:40px;height:40px;border-radius:10px;background:var(--pc);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.pcard-avatar svg{width:20px;height:20px;stroke:#fff;}
+.pcard-titles{flex:1;min-width:0;}
+.pcard-titles .role{font-family:var(--font-display);font-weight:650;font-size:15.5px;}
+.pcard-titles .exp{font-size:11.5px;color:var(--text-faint);}
+.pcard-idx{font-family:var(--font-mono);font-size:11px;color:var(--pc);border:1px solid var(--pc);border-radius:100px;padding:2px 9px;flex-shrink:0;}
+
+.pcard-body{padding:16px 20px 8px;}
+.pcard-select{display:flex;align-items:center;gap:7px;margin-left:auto;flex-shrink:0;}
+.pcard-select input{width:15px;height:15px;accent-color:var(--pc);}
+.pcard-select label{font-size:11px;color:var(--text-faint);}
+
+.resp-section{margin-bottom:12px;}
+.resp-section h4{
+  font-family:var(--font-mono);font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--pc);margin-bottom:5px;
+}
+.resp-section p, .resp-section li{font-size:13.8px;line-height:1.62;color:var(--text);}
+.resp-section ul{padding-left:0;}
+.resp-section li{position:relative;padding-left:16px;margin-bottom:4px;}
+.resp-section li::before{content:'';position:absolute;left:0;top:9px;width:5px;height:5px;border-radius:50%;background:var(--pc);}
+
+.demo-tag{
+  display:inline-flex;align-items:center;gap:5px;font-family:var(--font-mono);font-size:9.5px;
+  letter-spacing:.05em;text-transform:uppercase;color:var(--text-faint);
+  border:1px dashed var(--border-strong);border-radius:100px;padding:3px 9px;margin-left:8px;
+}
+
+.pcard-foot{
+  display:flex;align-items:center;gap:6px;padding:12px 20px;border-top:1px solid var(--border);
+  background:var(--panel-2);flex-wrap:wrap;
+}
+.foot-btn{
+  display:flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;color:var(--text-dim);
+  padding:6px 10px;border-radius:var(--radius-s);transition:background .12s ease,color .12s ease;
+}
+.foot-btn:hover{background:var(--panel);color:var(--accent);}
+.foot-btn svg{width:13px;height:13px;stroke:currentColor;}
+.foot-btn.liked{color:var(--accent);}
+.foot-btn.disliked{color:var(--warn);}
+.foot-spacer{flex:1;}
+
+/* Loading state */
+.pcard.loading .pcard-body{display:flex;align-items:center;gap:10px;padding:22px 20px;}
+.spinner{
+  width:16px;height:16px;border-radius:50%;border:2px solid var(--border-strong);
+  border-top-color:var(--pc);animation:spin .7s linear infinite;flex-shrink:0;
+}
+@keyframes spin{to{transform:rotate(360deg);}}
+.loading-text{font-size:13px;color:var(--text-dim);font-style:italic;}
+
+/* Error state */
+.pcard.errored .pcard-body{padding:16px 20px;}
+.error-box{
+  display:flex;align-items:flex-start;gap:10px;background:rgba(179,64,31,.08);
+  border:1px solid var(--warn);border-radius:var(--radius-s);padding:12px 14px;
+}
+.error-box svg{width:16px;height:16px;stroke:var(--warn);flex-shrink:0;margin-top:1px;}
+.error-box p{font-size:12.8px;color:var(--text);line-height:1.5;}
+.error-box .err-title{font-weight:700;color:var(--warn);margin-bottom:2px;}
+
+/* ---------------- CONSENSUS ---------------- */
+.consensus{
+  margin-top:34px;border-radius:var(--radius-l);
+  background:linear-gradient(160deg, var(--accent-soft), var(--panel) 55%);
+  border:1px solid var(--border);padding:26px 26px 22px;box-shadow:var(--shadow-s);
+}
+.consensus-head{display:flex;align-items:center;gap:10px;margin-bottom:16px;}
+.consensus-head .badge{
+  width:34px;height:34px;border-radius:9px;background:var(--accent);display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.consensus-head .badge svg{width:17px;height:17px;stroke:#fff;}
+.consensus-head h3{font-family:var(--font-display);font-size:19px;font-weight:650;}
+.consensus-head span{font-family:var(--font-mono);font-size:11px;color:var(--text-faint);}
+.consensus-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:14px;}
+.consensus-col h4{
+  font-family:var(--font-mono);font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;
+  color:var(--accent-strong);margin-bottom:8px;
+}
+.consensus-col ul li{font-size:13.5px;line-height:1.6;padding-left:16px;position:relative;margin-bottom:5px;}
+.consensus-col ul li::before{content:'';position:absolute;left:0;top:9px;width:5px;height:5px;border-radius:50%;background:var(--accent);}
+.consensus-note{
+  font-size:12px;color:var(--text-dim);border-top:1px solid var(--border);padding-top:12px;margin-top:6px;line-height:1.55;
+}
+.consensus-note strong{color:var(--text);}
+
+/* ---------------- COMPARE MODAL VIEW ---------------- */
+.compare-wrap{display:grid;gap:16px;}
+.compare-wrap.cols-2{grid-template-columns:1fr 1fr;}
+.compare-wrap.cols-3{grid-template-columns:1fr 1fr 1fr;}
+.compare-card{border:1px solid var(--border);border-radius:var(--radius-m);overflow:hidden;border-top:3px solid var(--pc);}
+.compare-card .ch{padding:12px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;background:var(--panel-2);}
+.compare-card .ch strong{font-size:13px;}
+.compare-card .cb{padding:14px;font-size:12.8px;line-height:1.55;}
+.compare-card .cb h5{font-family:var(--font-mono);font-size:9.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--pc);margin:10px 0 3px;}
+.compare-card .cb h5:first-child{margin-top:0;}
+
+/* ---------------- CHAT INPUT DOCK ---------------- */
+.dock{
+  position:sticky;bottom:0;background:linear-gradient(0deg, var(--bg) 60%, transparent);
+  padding:18px 24px 22px;
+}
+.dock-inner{max-width:1040px;margin:0 auto;}
+.input-shell{
+  background:var(--panel);border:1.5px solid var(--border-strong);border-radius:var(--radius-l);
+  box-shadow:var(--shadow-m);padding:10px 10px 10px 18px;display:flex;align-items:flex-end;gap:10px;
+  transition:border-color .15s ease;
+}
+.input-shell:focus-within{border-color:var(--accent);}
+.input-col{flex:1;display:flex;flex-direction:column;}
+#questionInput{
+  resize:none;min-height:26px;max-height:140px;font-size:14.5px;line-height:1.5;padding:10px 0;
+  background:transparent;color:var(--text);
+}
+#questionInput::placeholder{color:var(--text-faint);}
+.input-meta{display:flex;align-items:center;justify-content:space-between;padding:0 0 2px;}
+.char-count{font-family:var(--font-mono);font-size:10.5px;color:var(--text-faint);}
+.char-count.warn{color:var(--warn);}
+.input-hint{font-size:10.5px;color:var(--text-faint);}
+.dock-buttons{display:flex;gap:6px;align-items:center;padding-bottom:4px;}
+.clear-btn{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--text-faint);transition:all .12s ease;}
+.clear-btn:hover{background:var(--panel-2);color:var(--warn);}
+.clear-btn svg{width:16px;height:16px;stroke:currentColor;}
+.send-btn{
+  width:42px;height:42px;border-radius:50%;background:var(--accent);color:#fff;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .12s ease;
+  box-shadow:var(--shadow-s);
+}
+.send-btn:hover:not(:disabled){background:var(--accent-strong);transform:scale(1.05);}
+.send-btn:disabled{opacity:.4;cursor:not-allowed;}
+.send-btn svg{width:18px;height:18px;stroke:#fff;}
+.dock-footnote{text-align:center;font-size:10.5px;color:var(--text-faint);margin-top:9px;}
+
+/* ---------------- MODALS ---------------- */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(20,18,14,.5);backdrop-filter:blur(2px);
+  display:flex;align-items:center;justify-content:center;z-index:100;padding:20px;
+  opacity:0;pointer-events:none;transition:opacity .18s ease;
+}
+.modal-overlay.open{opacity:1;pointer-events:auto;}
+.modal{
+  background:var(--bg-elevated);border-radius:var(--radius-l);max-width:560px;width:100%;
+  max-height:88vh;overflow-y:auto;box-shadow:var(--shadow-l);
+  transform:translateY(14px) scale(.98);transition:transform .18s ease;border:1px solid var(--border);
+}
+.modal-overlay.open .modal{transform:translateY(0) scale(1);}
+.modal.wide{max-width:960px;}
+.modal-head{display:flex;align-items:center;gap:10px;padding:20px 22px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--bg-elevated);z-index:2;}
+.modal-head h3{font-family:var(--font-display);font-size:18px;font-weight:650;flex:1;}
+.modal-close{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--text-dim);}
+.modal-close:hover{background:var(--panel-2);}
+.modal-close svg{width:16px;height:16px;stroke:currentColor;}
+.modal-body{padding:22px;}
+
+.field{margin-bottom:16px;}
+.field label{display:block;font-size:12.5px;font-weight:600;margin-bottom:6px;color:var(--text-dim);}
+.field input, .field select, .field textarea{
+  width:100%;padding:10px 12px;border:1px solid var(--border-strong);border-radius:var(--radius-s);
+  background:var(--panel);font-size:13.5px;color:var(--text);
+}
+.field input:focus, .field select:focus, .field textarea:focus{border-color:var(--accent);}
+.field .hint{font-size:11px;color:var(--text-faint);margin-top:5px;line-height:1.5;}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+
+.warn-box{
+  background:rgba(179,64,31,.08);border:1px solid var(--warn);border-radius:var(--radius-s);
+  padding:12px 14px;font-size:12px;line-height:1.55;color:var(--text);margin-bottom:18px;display:flex;gap:9px;
+}
+.warn-box svg{width:16px;height:16px;stroke:var(--warn);flex-shrink:0;margin-top:1px;}
+
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border);}
+.toggle-row:last-child{border-bottom:none;}
+.toggle-row .tlabel{font-size:13.5px;font-weight:600;}
+.toggle-row .tdesc{font-size:11.5px;color:var(--text-faint);margin-top:2px;}
+.switch{width:40px;height:23px;border-radius:100px;background:var(--border-strong);position:relative;flex-shrink:0;transition:background .15s ease;}
+.switch.on{background:var(--accent);}
+.switch::after{content:'';position:absolute;top:2.5px;left:2.5px;width:18px;height:18px;border-radius:50%;background:#fff;transition:transform .15s ease;box-shadow:0 1px 3px rgba(0,0,0,.3);}
+.switch.on::after{transform:translateX(17px);}
+
+.modal-actions{display:flex;justify-content:flex-end;gap:10px;padding:16px 22px 22px;}
+.btn{padding:10px 18px;border-radius:var(--radius-s);font-weight:600;font-size:13px;transition:all .12s ease;}
+.btn.ghost{border:1px solid var(--border-strong);color:var(--text-dim);}
+.btn.ghost:hover{border-color:var(--text-dim);color:var(--text);}
+.btn.solid{background:var(--accent);color:#fff;}
+.btn.solid:hover{background:var(--accent-strong);}
+
+.persona-picker-modal{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+
+/* profile chip list */
+.chip-list{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;}
+.rmv-chip{display:flex;align-items:center;gap:5px;background:var(--panel-2);border:1px solid var(--border-strong);border-radius:100px;padding:4px 6px 4px 10px;font-size:12px;}
+.rmv-chip button{width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--border-strong);}
+.rmv-chip button svg{width:9px;height:9px;stroke:var(--bg-elevated);}
+
+/* toast */
+.toast{
+  position:fixed;bottom:26px;left:50%;transform:translateX(-50%) translateY(12px);
+  background:var(--accent-ink);color:#fff;padding:11px 20px;border-radius:100px;
+  font-size:13px;font-weight:600;box-shadow:var(--shadow-l);z-index:200;
+  opacity:0;pointer-events:none;transition:all .2s ease;display:flex;align-items:center;gap:8px;
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.toast svg{width:15px;height:15px;stroke:#fff;}
+
+/* ============================================================
+   RESPONSIVE DESIGN
+=============================================================== */
+@media (max-width:980px){
+  .roster{grid-template-columns:repeat(2,1fr);}
+  .consensus-grid{grid-template-columns:1fr;}
+  .compare-wrap.cols-3{grid-template-columns:1fr 1fr;}
+}
+@media (max-width:760px){
+  .sidebar{
+    position:fixed;left:0;top:0;transform:translateX(-100%);box-shadow:var(--shadow-l);
+  }
+  .sidebar.open{transform:translateX(0);}
+  .sidebar-overlay{
+    display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:39;
+  }
+  .sidebar-overlay.show{display:block;}
+  .sidebar-close-btn{
+    display:flex;width:30px;height:30px;border-radius:8px;align-items:center;justify-content:center;
+    margin-left:auto;color:var(--text-dim);
+  }
+  .sidebar-close-btn svg{width:16px;height:16px;stroke:currentColor;}
+  .hamburger{display:flex;}
+  .content-inner{padding:22px 16px 100px;}
+  .roster{grid-template-columns:1fr 1fr;}
+  .suggested-grid{grid-template-columns:1fr;}
+  .question-card{max-width:100%;}
+  .compare-wrap.cols-2, .compare-wrap.cols-3{grid-template-columns:1fr;}
+  .field-row{grid-template-columns:1fr;}
+  .persona-picker-modal{grid-template-columns:1fr;}
+  .selected-indicator{display:none;}
+  .dock{padding:12px 12px 16px;}
+  .topbar{padding:0 14px;}
+}
+@media (max-width:420px){
+  .roster{grid-template-columns:1fr;}
+}
+
+@media (prefers-reduced-motion:reduce){
+  *{animation-duration:.001s !important;transition-duration:.001s !important;}
+}
+</style>
+</head>
+<body>
+
+<!-- ============================================================
+     HTML STRUCTURE
+=============================================================== -->
+<div class="app">
+
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <!-- ---------------- SIDEBAR ---------------- -->
+  <aside class="sidebar" id="sidebar" aria-label="Application sidebar">
+    <div class="sidebar-scroll">
+      <div class="brand">
+        <div class="brand-mark">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V6a2 2 0 0 1 2-2h9l5 5v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/><path d="M14 4v5h5"/><path d="M8 13h8M8 17h5"/></svg>
+        </div>
+        <div class="brand-text">
+          <div class="name">Panel</div>
+          <div class="tag">Career Advisor</div>
+        </div>
+        <button class="sidebar-close-btn" id="sidebarCloseBtn" aria-label="Close sidebar">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <div style="padding:0 16px;">
+        <button class="new-chat-btn" id="newChatBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+          New chat
+        </button>
+      </div>
+
+      <div class="side-section">
+        <div class="side-heading">
+          <span>Personas</span>
+        </div>
+        <div class="select-all-row">
+          <button class="chip-btn" id="selectAllChip">Select all</button>
+          <button class="chip-btn" id="clearAllChip">Clear</button>
+        </div>
+        <div id="personaMiniList"></div>
+      </div>
+
+      <div class="side-section">
+        <div class="side-heading">
+          <span>Chat history</span>
+          <button class="side-link" id="clearHistoryBtn" style="width:auto;padding:2px 6px;font-size:10.5px;color:var(--text-faint);" title="Clear all history">clear all</button>
+        </div>
+        <div id="historyList"></div>
+      </div>
+    </div>
+
+    <div class="sidebar-footer">
+      <button class="side-link" id="profileBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>
+        My profile
+      </button>
+      <button class="side-link" id="settingsBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        Settings
+      </button>
+    </div>
+  </aside>
+
+  <!-- ---------------- MAIN ---------------- -->
+  <div class="main">
+    <header class="topbar">
+      <button class="icon-btn hamburger" id="hamburgerBtn" aria-label="Open sidebar">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+      </button>
+      <div>
+        <div class="topbar-title" id="topbarTitle">New conversation</div>
+        <div class="topbar-sub" id="topbarSub">Ask once, hear six perspectives</div>
+      </div>
+      <div class="topbar-spacer"></div>
+      <div class="selected-indicator" id="selectedIndicator">
+        <span class="dots" id="selectedDots"></span>
+        <span id="selectedCount">0 selected</span>
+      </div>
+      <button class="icon-btn" id="themeToggle" aria-label="Toggle dark mode" title="Toggle theme">
+        <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+      </button>
+    </header>
+
+    <main class="content" id="contentArea">
+      <div class="content-inner" id="contentInner">
+        <!-- Welcome screen / conversation renders here via JS -->
+      </div>
+    </main>
+
+    <div class="dock">
+      <div class="dock-inner">
+        <div class="input-shell">
+          <div class="input-col">
+            <textarea id="questionInput" rows="1" maxlength="600" placeholder="Ask anything about your career..." aria-label="Career question"></textarea>
+            <div class="input-meta">
+              <span class="input-hint">Enter to send &middot; Shift+Enter for new line</span>
+              <span class="char-count" id="charCount">0 / 600</span>
+            </div>
+          </div>
+          <div class="dock-buttons">
+            <button class="clear-btn" id="clearInputBtn" aria-label="Clear input" title="Clear">
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+            </button>
+            <button class="send-btn" id="sendBtn" aria-label="Send question" disabled>
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+            </button>
+          </div>
+        </div>
+        <div class="dock-footnote" id="dockFootnote">Demo Mode is on &middot; responses are simulated. Open Settings to connect a real AI provider.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     MODALS
+=============================================================== -->
+
+<!-- Settings modal -->
+<div class="modal-overlay" id="settingsOverlay" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="settingsTitle">AI provider settings</h3>
+      <button class="modal-close" data-close="settingsOverlay" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <div class="warn-box">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg>
+        <p>This is a single-file frontend demo. Any API key entered below is stored only in your browser's <code>localStorage</code> and is sent directly to the provider from this page. That is fine for a classroom demo, but it is <strong>not secure for a real deployed product</strong> &mdash; a production app should call the AI provider from a backend/proxy so the key is never exposed to the browser.</p>
+      </div>
+
+      <div class="toggle-row">
+        <div>
+          <div class="tlabel">Demo Mode</div>
+          <div class="tdesc">Use simulated, persona-specific sample answers &mdash; no API key or internet needed.</div>
+        </div>
+        <button class="switch" id="demoModeSwitch" role="switch" aria-checked="true"></button>
+      </div>
+
+      <div class="field" style="margin-top:16px;">
+        <label for="providerSelect">AI provider</label>
+        <select id="providerSelect">
+          <option value="openai">OpenAI</option>
+          <option value="gemini">Google Gemini</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="apiKeyInput">API key</label>
+        <input type="password" id="apiKeyInput" placeholder="sk-... or AIza...">
+        <div class="hint">Add your key here. It is only used from this browser tab &mdash; see warning above.</div>
+      </div>
+      <div class="field">
+        <label for="modelInput">Model name</label>
+        <input type="text" id="modelInput" placeholder="e.g. gpt-4o-mini or gemini-1.5-flash">
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn ghost" data-close="settingsOverlay">Cancel</button>
+      <button class="btn solid" id="saveSettingsBtn">Save settings</button>
+    </div>
+  </div>
+</div>
+
+<!-- Profile modal -->
+<div class="modal-overlay" id="profileOverlay" role="dialog" aria-modal="true" aria-labelledby="profileTitle">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="profileTitle">My profile</h3>
+      <button class="modal-close" data-close="profileOverlay" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:12.5px;color:var(--text-dim);margin-bottom:16px;line-height:1.55;">Optional. If filled in, responses become more personalized. You can use the advisor perfectly well without this.</p>
+      <div class="field-row">
+        <div class="field">
+          <label for="profEducation">Education level</label>
+          <select id="profEducation">
+            <option value="">Not specified</option>
+            <option>School (Grade 9-12)</option>
+            <option>Diploma</option>
+            <option>Undergraduate (B.Tech/B.E./B.Sc etc.)</option>
+            <option>Postgraduate (M.Tech/M.Sc/MBA etc.)</option>
+            <option>Fresh graduate</option>
+            <option>Working professional</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="profYear">Current year / semester</label>
+          <input type="text" id="profYear" placeholder="e.g. Final year">
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label for="profDegree">Degree / course</label>
+          <input type="text" id="profDegree" placeholder="e.g. B.Tech ICT">
+        </div>
+        <div class="field">
+          <label for="profBranch">Branch / specialization</label>
+          <input type="text" id="profBranch" placeholder="e.g. VLSI, Embedded Systems">
+        </div>
+      </div>
+      <div class="field">
+        <label for="profGoal">Career goal</label>
+        <input type="text" id="profGoal" placeholder="e.g. Core VLSI engineer at a semiconductor company">
+      </div>
+      <div class="field">
+        <label for="profIndustry">Preferred industry</label>
+        <input type="text" id="profIndustry" placeholder="e.g. Semiconductors, Embedded/IoT, Automotive">
+      </div>
+      <div class="field">
+        <label for="profSkillsInput">Skills</label>
+        <input type="text" id="profSkillsInput" placeholder="Type a skill and press Enter">
+        <div class="chip-list" id="profSkillsChips"></div>
+      </div>
+      <div class="field">
+        <label for="profInterestsInput">Interests</label>
+        <input type="text" id="profInterestsInput" placeholder="Type an interest and press Enter">
+        <div class="chip-list" id="profInterestsChips"></div>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn ghost" id="clearProfileBtn">Clear profile</button>
+      <button class="btn solid" id="saveProfileBtn">Save profile</button>
+    </div>
+  </div>
+</div>
+
+<!-- Persona picker (mobile-friendly full selector, also usable from welcome) -->
+<div class="modal-overlay" id="personaOverlay" role="dialog" aria-modal="true" aria-labelledby="personaTitle">
+  <div class="modal wide">
+    <div class="modal-head">
+      <h3 id="personaTitle">Choose your experts</h3>
+      <button class="modal-close" data-close="personaOverlay" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <div class="persona-picker-modal" id="personaPickerGrid"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn ghost" data-close="personaOverlay">Done</button>
+    </div>
+  </div>
+</div>
+
+<!-- Compare modal -->
+<div class="modal-overlay" id="compareOverlay" role="dialog" aria-modal="true" aria-labelledby="compareTitle">
+  <div class="modal wide">
+    <div class="modal-head">
+      <h3 id="compareTitle">Compare perspectives</h3>
+      <button class="modal-close" data-close="compareOverlay" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+    </div>
+    <div class="modal-body" id="compareBody">
+      <!-- filled by JS -->
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span id="toastMsg">Saved</span></div>
+
+<script>
+/* ============================================================
+   CONFIGURATION
+=============================================================== */
+const STORAGE_KEYS = {
+  HISTORY: 'panel_ai_history_v1',
+  PROFILE: 'panel_ai_profile_v1',
+  THEME: 'panel_ai_theme_v1',
+  SETTINGS: 'panel_ai_settings_v1'
+};
+
+const DEFAULT_SETTINGS = { demoMode:true, provider:'openai', apiKey:'', model:'' };
+
+/* ============================================================
+   PERSONA DEFINITIONS
+   Each persona carries: id, label, short desc, expertise line,
+   an svg icon, a css color var name, and a dedicated system prompt.
+=============================================================== */
+const BASE_PROMPT = `You are part of "Panel", an AI Multi-Persona Career Advisor built primarily for students, fresh graduates and job seekers.
+You must answer the student's career question strictly from the perspective of your assigned professional role below.
+Do not give generic, one-size-fits-all career advice. Reason using the priorities, responsibilities, knowledge and daily experience associated with your profession, and let those priorities visibly shape your answer, recommendation and next steps.
+Write in simple, student-friendly language and avoid unnecessary jargon.
+Structure your answer into exactly these six labelled sections: Perspective, Key Considerations, Advantages, Possible Concerns, Recommendation, Next Steps.
+Never guarantee employment, salary, admission or career success. When current market information is uncertain, say so clearly.
+Respond ONLY with a JSON object with these exact keys: "perspective" (string), "considerations" (array of short strings), "advantages" (array of short strings), "concerns" (array of short strings), "recommendation" (string), "nextSteps" (array of short strings). No markdown, no extra commentary, no code fences.`;
+
+const PERSONAS = {
+  hr: {
+    id:'hr', label:'HR Manager', color:'--p-hr',
+    desc:'Employability & workplace growth', expertise:'Hiring trends &middot; soft skills &middot; progression',
+    icon:`<circle cx="9" cy="8" r="3"/><path d="M2 20c0-3 3-5 7-5s7 2 7 5"/><path d="M17 8a3 3 0 1 0 0-6"/><path d="M22 20c0-2.5-1.8-4.3-4-4.9"/>`,
+    system: BASE_PROMPT + `\n\nYour role: You are a seasoned corporate HR Manager with 15 years of experience across recruitment, employee development and organizational planning. You care about employability, workplace fit, communication and soft skills, resume/profile strength, hiring trends, culture fit, and long-term career progression inside organizations. You think in terms of what companies actually look for when hiring and promoting people.`
+  },
+  swe: {
+    id:'swe', label:'Software Engineer', color:'--p-swe',
+    desc:'Technical depth & shipped work', expertise:'Languages &middot; projects &middot; system design',
+    icon:`<path d="m8 9-4 3 4 3"/><path d="m16 9 4 3-4 3"/><path d="M13 5 11 19"/>`,
+    system: BASE_PROMPT + `\n\nYour role: You are a Senior Software Engineer working in a product company, hands-on with real codebases every day. You care about concrete technical skills, languages, frameworks, system design, DSA, hands-on projects and portfolios, open-source contribution, coding interview readiness, and how technical careers actually progress (IC track vs management). You judge advice by whether it would actually help someone ship real, working software and pass a technical interview.`
+  },
+  prof: {
+    id:'prof', label:'Professor', color:'--p-prof',
+    desc:'Academic foundations & depth', expertise:'Fundamentals &middot; research &middot; higher studies',
+    icon:`<path d="M22 10 12 5 2 10l10 5 10-5Z"/><path d="M6 12v5c0 1.5 3 3 6 3s6-1.5 6-3v-5"/>`,
+    system: BASE_PROMPT + `\n\nYour role: You are a university Professor and researcher who has taught and mentored students for over 20 years. You care about strong conceptual foundations, depth over breadth, the value of higher education (M.Tech/M.S/PhD), research exposure, publications, academic rigor, and how early conceptual gaps hurt people later. You evaluate any path by whether it builds genuine understanding, not just short-term employability.`
+  },
+  startup: {
+    id:'startup', label:'Startup Founder', color:'--p-startup',
+    desc:'Speed, ownership & building', expertise:'0-to-1 building &middot; ownership &middot; risk',
+    icon:`<path d="M4.5 16.5c-1.5 1.5-2 5-2 5s3.5-.5 5-2c.8-.8 1-2.1.2-2.9-.8-.8-2.1-.6-3.2.4Z"/><path d="M15 9l-3 3-2-2 3-3c2-2 5-4 8-4 0 3-2 6-4 8Z" /><path d="M12 15l-3-3" /><path d="M9 12s-2-2-3.5-1.5S3 14 3 14" transform="translate(0,-1)"/>`,
+    system: BASE_PROMPT + `\n\nYour role: You are a Startup Founder who has built and scaled early-stage companies. You care about adaptability, ownership, ambiguity tolerance, speed of execution, business/customer value, generalist skill-stacking, willingness to take risk, and real-world problem solving over credentials. You judge a path by how much it builds someone's ability to create value fast with limited resources, and you are candid about the risk and instability involved in that trade-off.`
+  },
+  counselor: {
+    id:'counselor', label:'Career Counselor', color:'--p-counselor',
+    desc:'Fit, strengths & wellbeing', expertise:'Self-awareness &middot; goals &middot; work-life fit',
+    icon:`<circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 2"/>`,
+    system: BASE_PROMPT + `\n\nYour role: You are a professional Career Counselor who helps students understand themselves before choosing a path. You care about the person's genuine interests, natural strengths, personality, values, energy levels, work-life balance preferences, and long-term satisfaction rather than short-term prestige or salary. You gently ask what will keep the person motivated in 10-15 years, and you push back on choices that look good on paper but may not fit the individual.`
+  },
+  recruiter: {
+    id:'recruiter', label:'Recruiter', color:'--p-recruiter',
+    desc:'Hiring reality & readiness', expertise:'Job market &middot; screening &middot; interviews',
+    icon:`<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M3 12h18"/>`,
+    system: BASE_PROMPT + `\n\nYour role: You are a technical Recruiter who screens hundreds of resumes and runs interviews every month. You care about current job market demand, how resumes get filtered (ATS and human screening), what makes a candidate stand out in the first 30 seconds, certifications that actually matter, interview expectations, and realistic timelines for landing a role. You are blunt about what is and is not currently in demand.`
+  }
+};
+const PERSONA_KEYS = Object.keys(PERSONAS);
+
+/* ============================================================
+   APPLICATION STATE
+=============================================================== */
+const state = {
+  selectedPersonas: new Set(PERSONA_KEYS),
+  settings: loadSettings(),
+  profile: loadProfile(),
+  history: loadHistory(),
+  currentChatId: null,
+  currentQuestion: '',
+  currentResponses: {},     // personaId -> {status, data, error}
+  compareSelection: new Set(),
+  consensusData: null,
+  consensusStatus: 'idle'
+};
+
+/* ============================================================
+   LOCAL STORAGE
+=============================================================== */
+function loadSettings(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEYS.SETTINGS);
+    return raw ? Object.assign({}, DEFAULT_SETTINGS, JSON.parse(raw)) : Object.assign({}, DEFAULT_SETTINGS);
+  }catch(e){ return Object.assign({}, DEFAULT_SETTINGS); }
+}
+function saveSettings(){ localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(state.settings)); }
+
+function loadProfile(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEYS.PROFILE);
+    return raw ? JSON.parse(raw) : { education:'', year:'', degree:'', branch:'', goal:'', industry:'', skills:[], interests:[] };
+  }catch(e){ return { education:'', year:'', degree:'', branch:'', goal:'', industry:'', skills:[], interests:[] }; }
+}
+function saveProfile(){ localStorage.setItem(STORAGE_KEYS.PROFILE, JSON.stringify(state.profile)); }
+
+function loadHistory(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEYS.HISTORY);
+    return raw ? JSON.parse(raw) : [];
+  }catch(e){ return []; }
+}
+function saveHistory(){ localStorage.setItem(STORAGE_KEYS.HISTORY, JSON.stringify(state.history)); }
+
+function loadTheme(){ return localStorage.getItem(STORAGE_KEYS.THEME) || 'light'; }
+function saveTheme(t){ localStorage.setItem(STORAGE_KEYS.THEME, t); }
+
+/* ============================================================
+   UI HELPERS
+=============================================================== */
+const $ = sel => document.querySelector(sel);
+const $$ = sel => Array.from(document.querySelectorAll(sel));
+
+function escapeHtml(str){
+  return String(str == null ? '' : str).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function showToast(msg){
+  const t = $('#toast');
+  $('#toastMsg').textContent = msg;
+  t.classList.add('show');
+  clearTimeout(showToast._tm);
+  showToast._tm = setTimeout(()=> t.classList.remove('show'), 2200);
+}
+
+function openModal(id){
+  document.getElementById(id).classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeModal(id){
+  document.getElementById(id).classList.remove('open');
+  document.body.style.overflow = '';
+}
+$$('[data-close]').forEach(btn => btn.addEventListener('click', () => closeModal(btn.dataset.close)));
+$$('.modal-overlay').forEach(ov => ov.addEventListener('click', e => { if(e.target === ov) closeModal(ov.id); }));
+document.addEventListener('keydown', e => {
+  if(e.key === 'Escape'){
+    $$('.modal-overlay.open').forEach(ov => closeModal(ov.id));
+  }
+});
+
+/* ============================================================
+   THEME
+=============================================================== */
+function applyTheme(t){
+  document.body.classList.toggle('dark', t === 'dark');
+  const icon = $('#themeIcon');
+  icon.innerHTML = t === 'dark'
+    ? '<path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8Z"/>'
+    : '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>';
+}
+$('#themeToggle').addEventListener('click', () => {
+  const next = document.body.classList.contains('dark') ? 'light' : 'dark';
+  applyTheme(next); saveTheme(next);
+});
+applyTheme(loadTheme());
+
+/* ============================================================
+   SIDEBAR (mobile)
+=============================================================== */
+function openSidebar(){ $('#sidebar').classList.add('open'); $('#sidebarOverlay').classList.add('show'); }
+function closeSidebar(){ $('#sidebar').classList.remove('open'); $('#sidebarOverlay').classList.remove('show'); }
+$('#hamburgerBtn').addEventListener('click', openSidebar);
+$('#sidebarCloseBtn').addEventListener('click', closeSidebar);
+$('#sidebarOverlay').addEventListener('click', closeSidebar);
+
+/* ============================================================
+   PERSONA SELECTION UI
+=============================================================== */
+function renderPersonaMiniList(){
+  const wrap = $('#personaMiniList');
+  wrap.innerHTML = PERSONA_KEYS.map(key => {
+    const p = PERSONAS[key];
+    const active = state.selectedPersonas.has(key);
+    return `<button class="persona-mini ${active?'active':''}" style="--pc:var(${p.color})" data-persona="${key}" aria-pressed="${active}">
+      <span class="dot"></span>
+      <span class="mini-label">${p.label}</span>
+      <svg class="check" viewBox="0 0 24 24" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+    </button>`;
+  }).join('');
+  wrap.querySelectorAll('.persona-mini').forEach(btn => {
+    btn.addEventListener('click', () => {
+      togglePersona(btn.dataset.persona);
+    });
+  });
+}
+
+function togglePersona(key){
+  if(state.selectedPersonas.has(key)) state.selectedPersonas.delete(key);
+  else state.selectedPersonas.add(key);
+  syncPersonaUI();
+}
+
+function syncPersonaUI(){
+  renderPersonaMiniList();
+  renderPersonaPickerModal();
+  updateSelectedIndicator();
+  updateSendEnabled();
+}
+
+function updateSelectedIndicator(){
+  const n = state.selectedPersonas.size;
+  $('#selectedCount').textContent = n === PERSONA_KEYS.length ? 'All experts' : (n === 0 ? 'None selected' : n + ' selected');
+  $('#selectedDots').innerHTML = Array.from(state.selectedPersonas).slice(0,6).map(k => `<span style="background:var(${PERSONAS[k].color})"></span>`).join('');
+}
+
+$('#selectAllChip').addEventListener('click', () => { state.selectedPersonas = new Set(PERSONA_KEYS); syncPersonaUI(); });
+$('#clearAllChip').addEventListener('click', () => { state.selectedPersonas = new Set(); syncPersonaUI(); });
+
+function renderPersonaPickerModal(){
+  const wrap = $('#personaPickerGrid');
+  wrap.innerHTML = PERSONA_KEYS.map(key => {
+    const p = PERSONAS[key];
+    const active = state.selectedPersonas.has(key);
+    return `<button class="roster-card" style="--pc:var(${p.color});${active?`border-color:var(${p.color});box-shadow:0 0 0 1px var(${p.color})`:''}" data-persona-pick="${key}">
+      <span class="roster-avatar" style="background:var(${p.color})"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${p.icon}</svg></span>
+      <span>
+        <span class="roster-name" style="display:block;">${p.label} ${active?'&#10003;':''}</span>
+        <span class="roster-role">${p.desc}</span>
+      </span>
+    </button>`;
+  }).join('');
+  wrap.querySelectorAll('[data-persona-pick]').forEach(btn => {
+    btn.addEventListener('click', () => togglePersona(btn.dataset.personaPick));
+  });
+}
+$('#profileBtn') && null;
+
+/* ============================================================
+   WELCOME SCREEN
+=============================================================== */
+const SUGGESTED_QUESTIONS = [
+  'Which career should I choose after engineering?',
+  'Should I pursue higher studies or get a job?',
+  'How should I prepare for campus placements?',
+  'Which technical skills are currently important?',
+  'Startup or MNC: which is better for a fresher?',
+  'What should I add to my resume?'
+];
+
+function renderRoster(){
+  return PERSONA_KEYS.map(key => {
+    const p = PERSONAS[key];
+    return `<div class="roster-card" style="--pc:var(${p.color})">
+      <span class="roster-avatar" style="background:var(${p.color})"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${p.icon}</svg></span>
+      <span>
+        <span class="roster-name" style="display:block;">${p.label}</span>
+        <span class="roster-role">${p.desc}</span>
+      </span>
+    </div>`;
+  }).join('');
+}
+
+function renderWelcome(){
+  $('#topbarTitle').textContent = 'New conversation';
+  $('#topbarSub').textContent = 'Ask once, hear six perspectives';
+  $('#contentInner').innerHTML = `
+    <div class="welcome">
+      <div class="welcome-eyebrow">Panel &middot; AI Career Advisory</div>
+      <h1>One career question.<br><em>Six professional takes.</em></h1>
+      <p class="lede">Ask something you're genuinely unsure about &mdash; a course choice, a job offer, a skill gap. An HR manager, a software engineer, a professor, a founder, a counselor and a recruiter will each answer from their own chair, then Panel finds where they agree.</p>
+      <div class="roster">${renderRoster()}</div>
+      <div class="suggested-heading">Or start with a common question</div>
+      <div class="suggested-grid">
+        ${SUGGESTED_QUESTIONS.map(q => `<button class="suggested-card" data-suggest="${escapeHtml(q)}">${escapeHtml(q)}</button>`).join('')}
+      </div>
+    </div>
+  `;
+  $$('[data-suggest]').forEach(btn => btn.addEventListener('click', () => {
+    $('#questionInput').value = btn.dataset.suggest;
+    handleInputChange();
+    $('#questionInput').focus();
+  }));
+}
+
+/* ============================================================
+   PROMPT ENGINEERING
+=============================================================== */
+function buildUserPrompt(question){
+  const p = state.profile;
+  let ctx = '';
+  const bits = [];
+  if(p.education) bits.push(`Education level: ${p.education}`);
+  if(p.degree) bits.push(`Degree/course: ${p.degree}`);
+  if(p.branch) bits.push(`Branch/specialization: ${p.branch}`);
+  if(p.year) bits.push(`Current year/semester: ${p.year}`);
+  if(p.goal) bits.push(`Stated career goal: ${p.goal}`);
+  if(p.industry) bits.push(`Preferred industry: ${p.industry}`);
+  if(p.skills && p.skills.length) bits.push(`Skills: ${p.skills.join(', ')}`);
+  if(p.interests && p.interests.length) bits.push(`Interests: ${p.interests.join(', ')}`);
+  if(bits.length){
+    ctx = `Student profile context (use to personalize, but do not simply repeat it back):\n- ${bits.join('\n- ')}\n\n`;
+  }
+  return `${ctx}Student's question: "${question}"`;
+}
+
+function buildConsensusPrompt(question, responses){
+  const summaries = Object.keys(responses).map(k => {
+    const r = responses[k].data;
+    if(!r) return '';
+    return `${PERSONAS[k].label}: Recommendation - ${r.recommendation}. Advantages: ${(r.advantages||[]).join('; ')}. Concerns: ${(r.concerns||[]).join('; ')}.`;
+  }).filter(Boolean).join('\n');
+  return `The student asked: "${question}"\n\nHere is a summary of what each professional persona answered:\n${summaries}\n\nRespond ONLY with a JSON object with these exact keys: "agreements" (array of short strings describing what most experts agree on), "disagreements" (array of short strings describing where experts disagree), "advantages" (array of short strings, major overall advantages), "risks" (array of short strings, major overall risks/concerns), "skills" (array of short strings, skills the student may need), "nextAction" (string, one recommended next action). No markdown, no extra commentary, no code fences.`;
+}
+
+/* ============================================================
+   OPENAI API
+=============================================================== */
+async function askOpenAI(systemPrompt, userPrompt){
+  const { apiKey, model } = state.settings;
+  const res = await fetch('https://api.openai.com/v1/chat/completions', {
+    method:'POST',
+    headers:{ 'Content-Type':'application/json', 'Authorization':`Bearer ${apiKey}` },
+    body: JSON.stringify({
+      model: model || 'gpt-4o-mini',
+      messages: [ { role:'system', content: systemPrompt }, { role:'user', content: userPrompt } ],
+      temperature: 0.7,
+      response_format: { type:'json_object' }
+    })
+  });
+  if(!res.ok){
+    const errBody = await safeJson(res);
+    throw new Error(classifyApiError(res.status, errBody));
+  }
+  const data = await res.json();
+  const text = data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
+  if(!text) throw new Error('Empty response from OpenAI.');
+  return parseJsonSafely(text);
+}
+
+/* ============================================================
+   GEMINI API
+=============================================================== */
+async function askGemini(systemPrompt, userPrompt){
+  const { apiKey, model } = state.settings;
+  const m = model || 'gemini-1.5-flash';
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${apiKey}`;
+  const res = await fetch(url, {
+    method:'POST',
+    headers:{ 'Content-Type':'application/json' },
+    body: JSON.stringify({
+      systemInstruction: { parts:[{ text: systemPrompt }] },
+      contents: [ { role:'user', parts:[{ text: userPrompt }] } ],
+      generationConfig: { temperature:0.7, responseMimeType:'application/json' }
+    })
+  });
+  if(!res.ok){
+    const errBody = await safeJson(res);
+    throw new Error(classifyApiError(res.status, errBody));
+  }
+  const data = await res.json();
+  const text = data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts[0] && data.candidates[0].content.parts[0].text;
+  if(!text) throw new Error('Empty response from Gemini.');
+  return parseJsonSafely(text);
+}
+
+async function safeJson(res){ try{ return await res.json(); }catch(e){ return null; } }
+
+function classifyApiError(status, body){
+  const msg = (body && body.error && body.error.message) ? body.error.message : '';
+  if(status === 401 || status === 403) return 'Invalid or unauthorized API key. Check Settings.';
+  if(status === 429) return 'Rate limit reached. Please wait a moment and try again.';
+  if(status >= 500) return 'The AI provider is currently unavailable. Please try again shortly.';
+  return msg || `Request failed (status ${status}).`;
+}
+
+function parseJsonSafely(text){
+  let cleaned = text.trim().replace(/^```json/i,'').replace(/^```/,'').replace(/```$/,'').trim();
+  try{ return JSON.parse(cleaned); }
+  catch(e){ throw new Error('Could not understand the AI response format.'); }
+}
+
+/* ============================================================
+   DEMO MODE — persona-differentiated simulated responses
+=============================================================== */
+function topicWord(question){
+  const q = question.toLowerCase();
+  if(/vlsi|asic|chip|semiconductor/.test(q)) return 'VLSI/chip design';
+  if(/software|coding|developer|programm/.test(q)) return 'software engineering';
+  if(/startup|founder|entrepreneur/.test(q)) return 'the startup path';
+  if(/m\.?tech|masters|higher stud|phd/.test(q)) return 'higher studies';
+  if(/placement|interview|resume|job/.test(q)) return 'the job search';
+  if(/embedded|iot|hardware/.test(q)) return 'embedded/IoT hardware';
+  return 'this career choice';
+}
+
+const DEMO_TEMPLATES = {
+  hr: q => ({
+    perspective:`From an HR standpoint, ${topicWord(q)} is judged mainly by how well a candidate's profile matches what hiring teams are actively screening for right now, not just technical merit alone.`,
+    considerations:['How this choice reads on a resume to a non-technical recruiter first', 'Whether it builds communication and teamwork evidence, not just hard skills', 'How it affects your progression timeline into leads/managers later'],
+    advantages:['Clear narrative for interviews if you can explain the "why" behind the choice', 'Room to build soft-skill signals (ownership, collaboration) alongside technical ones'],
+    concerns:['Purely technical stories without people/impact framing tend to underperform in HR rounds', 'Career switches without a clear story can raise questions about commitment'],
+    recommendation:`Treat ${topicWord(q)} as one input into your overall employability story, not the whole story — pair it with visible teamwork and communication evidence.`,
+    nextSteps:['Rewrite your resume bullet points around impact, not just tasks', 'Practice a 60-second story explaining this choice for interviews', 'Ask 2 professionals in this space what HR actually asks them']
+  }),
+  swe: q => ({
+    perspective:`Technically speaking, ${topicWord(q)} comes down to whether you can point to real, working things you've built — the market rewards demonstrated skill far more than the label on your degree.`,
+    considerations:['Depth in one stack/domain beats shallow exposure to five', 'Whether you can explain trade-offs in your own project decisions', 'How current the tools/techniques you list actually are'],
+    advantages:['Skills here compound quickly once fundamentals click', 'Strong signal in interviews if backed by a GitHub/portfolio'],
+    concerns:['Tutorials without original projects rarely survive a technical interview', 'Skipping fundamentals to chase trendy tools often backfires later'],
+    recommendation:`Go deep, not wide — ship 2-3 real projects in ${topicWord(q)} that you can defend line-by-line in an interview.`,
+    nextSteps:['Pick one project idea and finish it end-to-end this month', 'Push clean, documented code to a public repository', 'Do 5 mock technical interview questions in this area weekly']
+  }),
+  prof: q => ({
+    perspective:`Academically, ${topicWord(q)} should be evaluated on whether it strengthens your fundamentals — the specific tool or company will change many times, but strong conceptual grounding will not.`,
+    considerations:['Whether you understand the underlying theory, not just the workflow', 'How this choice affects eligibility for higher studies later, if relevant', 'Exposure to research/literature, even informally, in this domain'],
+    advantages:['Deep fundamentals transfer across tools, companies, and even industries', 'Better long-term adaptability when technologies inevitably shift'],
+    concerns:['Chasing only "placement-ready" skills can leave conceptual gaps that surface in senior roles', 'Under-investing in fundamentals now often means relearning them expensively later'],
+    recommendation:`Do not skip the fundamentals of ${topicWord(q)} even if they feel slower — they are what will still be useful in 10 years.`,
+    nextSteps:['Revisit the core textbook/lecture material for this domain, not just applied tutorials', 'Consider a small research or literature-review exercise for depth', 'Talk to a faculty mentor about whether higher studies would help here']
+  }),
+  startup: q => ({
+    perspective:`From a founder's chair, ${topicWord(q)} is worth it mainly if it increases your ability to build and ship something real with limited resources — that muscle matters more than the title.`,
+    considerations:['How much ownership and ambiguity you will realistically get', 'Whether this path lets you touch the full 0-to-1 process, not one narrow slice', 'Your personal risk tolerance and runway (financial and mental)'],
+    advantages:['Fast compressed learning if you take on real ownership early', 'Builds a generalist skill-stack that is hard to get in large, siloed teams'],
+    concerns:['Higher instability and slower structured mentorship than a large organization', 'Can be draining without a strong personal support system'],
+    recommendation:`Choose ${topicWord(q)} on the basis of ownership and speed of learning, but go in with eyes open about the volatility.`,
+    nextSteps:['Try a small self-initiated project with a real user or customer, even tiny', 'Talk to someone currently doing this to hear the unfiltered version', 'Set a personal risk boundary (time or money) before committing fully']
+  }),
+  counselor: q => ({
+    perspective:`As a counselor, my first question about ${topicWord(q)} is not "which is better" but "which one keeps you energized on a hard Tuesday" — sustainable careers are built on fit, not just prestige.`,
+    considerations:['What genuinely holds your attention without external pressure', 'Your natural working style — solo deep work vs collaborative and fast-paced', 'What "success" would need to feel like for you personally, 10-15 years out'],
+    advantages:['Choosing for fit reduces burnout risk and improves long-term performance', 'Self-aware choices are easier to explain and stay committed to'],
+    concerns:['Choosing purely for prestige or peer pressure often leads to quiet dissatisfaction later', 'Ignoring your energy patterns can look "successful" on paper but feel hollow'],
+    recommendation:`Before locking into ${topicWord(q)}, spend real time reflecting on whether it fits how you naturally like to work, not just its reputation.`,
+    nextSteps:['Journal what tasks made you lose track of time in the last month', 'Talk to 2 people already in this path about their actual daily routine', 'Rank your top 3 non-negotiables (pace, stability, creativity, money, impact)']
+  }),
+  recruiter: q => ({
+    perspective:`From where I sit screening candidates, ${topicWord(q)} matters less than whether your profile clears the first filters — ATS keywords, a coherent resume, and demonstrable proof of skill.`,
+    considerations:['Current hiring demand and openings in this specific area', 'Whether your resume uses the exact keywords recruiters search for', 'How quickly you can realistically become interview-ready'],
+    advantages:['Clear, in-demand skills in this area currently get faster resume shortlisting', 'Relevant certifications can meaningfully offset limited work experience'],
+    concerns:['Market demand shifts — what is "hot" now may cool by the time you graduate', 'Generic resumes without measurable outcomes get filtered out early'],
+    recommendation:`Validate ${topicWord(q)} against real, current job postings before committing, and build your resume around the exact language those postings use.`,
+    nextSteps:['Shortlist 10 real job postings in this area and note repeated keywords', 'Get one relevant certification that recruiters commonly screen for', 'Do 3 mock interviews focused on this specific role type']
+  })
+};
+
+function generateDemoResponse(personaKey, question){
+  return DEMO_TEMPLATES[personaKey](question);
+}
+
+function generateDemoConsensus(question, responses){
+  const allRecs = Object.keys(responses).map(k => responses[k].data && responses[k].data.recommendation).filter(Boolean);
+  return {
+    agreements:['Most perspectives agree this decision should be backed by real evidence (projects, conversations, or market data), not assumptions', 'Building demonstrable proof of skill or fit matters across every professional lens consulted', `Nobody suggests deciding on ${topicWord(question)} without first testing it in a small, low-risk way`],
+    disagreements:['HR and Recruiter view emphasize market/resume signals, while the Professor and Counselor emphasize long-term fundamentals and personal fit — these can pull in different short-term directions', 'The Startup Founder favors speed and ownership, while the Professor favors depth and patience — a real trade-off worth weighing consciously'],
+    advantages:['Multiple credible paths forward rather than one "correct" answer', 'Clear, concrete next actions exist regardless of which direction you lean'],
+    risks:['Committing fully before testing fit or market demand', 'Optimizing only for one lens (e.g. only resume-friendliness, or only personal interest) while ignoring the others'],
+    skills:['Clear communication of your choices and reasoning', 'A visible, demonstrable project or proof of work in the chosen area', 'Basic awareness of current market demand in that area'],
+    nextAction:`Pick one small, low-risk way to test ${topicWord(question)} in the next 2-3 weeks — a mini project, an informational conversation, or a shortlisted set of real job postings — before making it a bigger commitment.`
+  };
+}
+
+/* ============================================================
+   CHAT FUNCTIONS
+=============================================================== */
+function handleInputChange(){
+  const val = $('#questionInput').value;
+  const len = val.length;
+  $('#charCount').textContent = `${len} / 600`;
+  $('#charCount').classList.toggle('warn', len > 560);
+  autoGrow();
+  updateSendEnabled();
+}
+function autoGrow(){
+  const ta = $('#questionInput');
+  ta.style.height = 'auto';
+  ta.style.height = Math.min(ta.scrollHeight, 140) + 'px';
+}
+function updateSendEnabled(){
+  const val = $('#questionInput').value.trim();
+  $('#sendBtn').disabled = !(val.length > 0 && state.selectedPersonas.size > 0);
+}
+$('#questionInput').addEventListener('input', handleInputChange);
+$('#questionInput').addEventListener('keydown', e => {
+  if(e.key === 'Enter' && !e.shiftKey){
+    e.preventDefault();
+    trySubmit();
+  }
+});
+$('#clearInputBtn').addEventListener('click', () => {
+  $('#questionInput').value = '';
+  handleInputChange();
+  $('#questionInput').focus();
+});
+$('#sendBtn').addEventListener('click', trySubmit);
+
+function trySubmit(){
+  const question = $('#questionInput').value.trim();
+  if(!question){ showToast('Please type a question first'); return; }
+  if(question.length > 600){ showToast('Question is too long'); return; }
+  if(state.selectedPersonas.size === 0){
+    showToast('Select at least one persona');
+    openModal('personaOverlay');
+    return;
+  }
+  submitQuestion(question);
+}
+
+function submitQuestion(question){
+  state.currentQuestion = question;
+  state.currentResponses = {};
+  state.consensusData = null;
+  state.consensusStatus = 'idle';
+  state.compareSelection = new Set();
+  state.currentChatId = 'chat_' + Date.now();
+  $('#questionInput').value = '';
+  handleInputChange();
+
+  const personaList = Array.from(state.selectedPersonas);
+  personaList.forEach(k => { state.currentResponses[k] = { status:'loading', data:null, error:null }; });
+
+  renderConversation();
+  $('#topbarTitle').textContent = question.length > 46 ? question.slice(0,46) + '…' : question;
+  $('#topbarSub').textContent = `${personaList.length} expert${personaList.length>1?'s':''} responding`;
+
+  personaList.forEach(k => runPersona(k, question));
+}
+
+async function runPersona(personaKey, question){
+  try{
+    let data;
+    if(state.settings.demoMode){
+      await wait(500 + Math.random()*900);
+      data = generateDemoResponse(personaKey, question);
+      data.__demo = true;
+    }else{
+      if(!state.settings.apiKey){
+        throw new Error('No API key configured. Open Settings, or enable Demo Mode.');
+      }
+      const system = PERSONAS[personaKey].system;
+      const user = buildUserPrompt(question);
+      data = state.settings.provider === 'gemini' ? await askGemini(system, user) : await askOpenAI(system, user);
+    }
+    state.currentResponses[personaKey] = { status:'done', data, error:null };
+  }catch(err){
+    state.currentResponses[personaKey] = { status:'error', data:null, error: err.message || 'Something went wrong.' };
+  }
+  renderConversation();
+  maybeRunConsensus();
+}
+
+function wait(ms){ return new Promise(r => setTimeout(r, ms)); }
+
+function allDone(){
+  return Object.values(state.currentResponses).every(r => r.status !== 'loading') && Object.keys(state.currentResponses).length > 0;
+}
+
+async function maybeRunConsensus(){
+  if(!allDone()) return;
+  const successCount = Object.values(state.currentResponses).filter(r => r.status === 'done').length;
+  if(successCount < 2){ persistToHistory(); return; }
+  if(state.consensusStatus === 'done' || state.consensusStatus === 'loading') { persistToHistory(); return; }
+  state.consensusStatus = 'loading';
+  renderConversation();
+  try{
+    let data;
+    if(state.settings.demoMode){
+      await wait(600);
+      data = generateDemoConsensus(state.currentQuestion, state.currentResponses);
+      data.__demo = true;
+    }else{
+      const prompt = buildConsensusPrompt(state.currentQuestion, state.currentResponses);
+      const consensusSystem = 'You are the synthesis module of "Panel", an AI career advisor. You read multiple professional perspectives and summarize agreement, disagreement, risks and next actions fairly, without inventing new opinions. Never guarantee outcomes.';
+      data = state.settings.provider === 'gemini' ? await askGemini(consensusSystem, prompt) : await askOpenAI(consensusSystem, prompt);
+    }
+    state.consensusData = data;
+    state.consensusStatus = 'done';
+  }catch(err){
+    state.consensusStatus = 'error';
+  }
+  renderConversation();
+  persistToHistory();
+}
+
+function persistToHistory(){
+  if(!allDone()) return;
+  const existingIdx = state.history.findIndex(h => h.id === state.currentChatId);
+  const record = {
+    id: state.currentChatId,
+    question: state.currentQuestion,
+    personas: Array.from(state.selectedPersonas),
+    responses: state.currentResponses,
+    consensus: state.consensusData,
+    timestamp: Date.now()
+  };
+  if(existingIdx >= 0) state.history[existingIdx] = record;
+  else state.history.unshift(record);
+  state.history = state.history.slice(0, 50);
+  saveHistory();
+  renderHistoryList();
+}
+
+/* ============================================================
+   NEW CHAT
+=============================================================== */
+function newChat(){
+  state.currentChatId = null;
+  state.currentQuestion = '';
+  state.currentResponses = {};
+  state.consensusData = null;
+  state.consensusStatus = 'idle';
+  state.compareSelection = new Set();
+  renderWelcome();
+  renderHistoryList();
+  $('#topbarTitle').textContent = 'New conversation';
+  $('#topbarSub').textContent = 'Ask once, hear six perspectives';
+  $('#questionInput').value = '';
+  handleInputChange();
+  $('#questionInput').focus();
+  closeSidebar();
+}
+$('#newChatBtn').addEventListener('click', newChat);
+
+/* ============================================================
+   RENDER: CONVERSATION (question + persona cards + consensus)
+=============================================================== */
+function renderConversation(){
+  const q = state.currentQuestion;
+  const personaList = Object.keys(state.currentResponses);
+  const doneCount = Object.values(state.currentResponses).filter(r => r.status === 'done').length;
+
+  let html = `
+    <div class="qa-block">
+      <div class="question-card">
+        <div class="qmeta">YOUR QUESTION &middot; ${new Date().toLocaleDateString()}</div>
+        <p>${escapeHtml(q)}</p>
+      </div>
+
+      <div class="responses-heading">
+        <h2>Perspectives (${doneCount}/${personaList.length})</h2>
+        <div class="responses-actions">
+          <button class="small-btn" id="askAllBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21a8 8 0 1 0-16 0"/><circle cx="12" cy="7" r="4"/></svg>
+            Ask all experts
+          </button>
+          <button class="small-btn" id="compareBtn" ${doneCount<2?'disabled':''}>
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="18" rx="1"/><rect x="14" y="3" width="7" height="18" rx="1"/></svg>
+            Compare perspectives
+          </button>
+        </div>
+      </div>
+
+      <div class="response-grid">
+        ${personaList.map(k => renderPersonaCard(k)).join('')}
+      </div>
+
+      ${renderConsensusBlock(doneCount, personaList.length)}
+    </div>
+  `;
+  $('#contentInner').innerHTML = html;
+  bindConversationEvents();
+  $('#contentArea').scrollTop = $('#contentArea').scrollHeight;
+}
+
+function renderPersonaCard(key){
+  const p = PERSONAS[key];
+  const r = state.currentResponses[key];
+  const styleVar = `--pc:var(${p.color})`;
+
+  if(r.status === 'loading'){
+    return `<div class="pcard loading" style="${styleVar}">
+      <div class="pcard-head">
+        <div class="pcard-avatar" style="background:var(${p.color})"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${p.icon}</svg></div>
+        <div class="pcard-titles"><div class="role">${p.label}</div><div class="exp">${p.expertise}</div></div>
+      </div>
+      <div class="pcard-body">
+        <span class="spinner"></span>
+        <span class="loading-text">${p.label} is analyzing…</span>
+      </div>
+    </div>`;
+  }
+
+  if(r.status === 'error'){
+    return `<div class="pcard errored" style="${styleVar}">
+      <div class="pcard-head">
+        <div class="pcard-avatar" style="background:var(${p.color})"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${p.icon}</svg></div>
+        <div class="pcard-titles"><div class="role">${p.label}</div><div class="exp">${p.expertise}</div></div>
+      </div>
+      <div class="pcard-body">
+        <div class="error-box">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg>
+          <p><span class="err-title">Could not get a response</span>${escapeHtml(r.error)}</p>
+        </div>
+      </div>
+      <div class="pcard-foot">
+        <button class="foot-btn" data-regen="${key}">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.6-6.3L21 8"/><path d="M21 3v5h-5"/></svg>
+          Retry
+        </button>
+      </div>
+    </div>`;
+  }
+
+  const d = r.data || {};
+  return `<div class="pcard" style="${styleVar}">
+    <div class="pcard-head">
+      <div class="pcard-avatar" style="background:var(${p.color})"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${p.icon}</svg></div>
+      <div class="pcard-titles">
+        <div class="role">${p.label} ${d.__demo?'<span class="demo-tag">Demo response</span>':''}</div>
+        <div class="exp">${p.expertise}</div>
+      </div>
+      <div class="pcard-select">
+        <input type="checkbox" id="cmp_${key}" ${state.compareSelection.has(key)?'checked':''} data-compare="${key}">
+        <label for="cmp_${key}">Compare</label>
+      </div>
+    </div>
+    <div class="pcard-body">
+      <div class="resp-section"><h4>Perspective</h4><p>${escapeHtml(d.perspective)}</p></div>
+      <div class="resp-section"><h4>Key Considerations</h4><ul>${(d.considerations||[]).map(x=>`<li>${escapeHtml(x)}</li>`).join('')}</ul></div>
+      <div class="resp-section"><h4>Advantages</h4><ul>${(d.advantages||[]).map(x=>`<li>${escapeHtml(x)}</li>`).join('')}</ul></div>
+      <div class="resp-section"><h4>Possible Concerns</h4><ul>${(d.concerns||[]).map(x=>`<li>${escapeHtml(x)}</li>`).join('')}</ul></div>
+      <div class="resp-section"><h4>Recommendation</h4><p>${escapeHtml(d.recommendation)}</p></div>
+      <div class="resp-section"><h4>Next Steps</h4><ul>${(d.nextSteps||[]).map(x=>`<li>${escapeHtml(x)}</li>`).join('')}</ul></div>
+    </div>
+    <div class="pcard-foot">
+      <button class="foot-btn" data-copy="${key}">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>
+        Copy
+      </button>
+      <button class="foot-btn" data-regen="${key}">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.6-6.3L21 8"/><path d="M21 3v5h-5"/></svg>
+        Regenerate
+      </button>
+      <div class="foot-spacer"></div>
+      <button class="foot-btn ${r.rating==='up'?'liked':''}" data-rate="${key}" data-val="up" aria-label="Helpful">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.3a2 2 0 0 0 2-1.7l1.4-9a2 2 0 0 0-2-2.3H14Z"/><path d="M7 22H4a1 1 0 0 1-1-1v-9a1 1 0 0 1 1-1h3"/></svg>
+      </button>
+      <button class="foot-btn ${r.rating==='down'?'disliked':''}" data-rate="${key}" data-val="down" aria-label="Not helpful">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transform:rotate(180deg)"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.3a2 2 0 0 0 2-1.7l1.4-9a2 2 0 0 0-2-2.3H14Z"/><path d="M7 22H4a1 1 0 0 1-1-1v-9a1 1 0 0 1 1-1h3"/></svg>
+      </button>
+    </div>
+  </div>`;
+}
+
+function renderConsensusBlock(doneCount, total){
+  if(doneCount < 2) return '';
+  if(state.consensusStatus === 'loading'){
+    return `<div class="consensus"><div class="consensus-head"><span class="badge"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4M12 18v4M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8M2 12h4M18 12h4M4.9 19.1l2.8-2.8M16.3 7.7l2.8-2.8"/></svg></span><h3>AI Career Consensus</h3></div><div style="display:flex;align-items:center;gap:10px;padding:6px 0;"><span class="spinner" style="border-top-color:var(--accent)"></span><span class="loading-text">Synthesizing perspectives…</span></div></div>`;
+  }
+  if(state.consensusStatus === 'error'){
+    return `<div class="consensus"><div class="consensus-head"><span class="badge"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4M12 18v4M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8M2 12h4M18 12h4M4.9 19.1l2.8-2.8M16.3 7.7l2.8-2.8"/></svg></span><h3>AI Career Consensus</h3></div><div class="error-box"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg><p><span class="err-title">Consensus unavailable</span>Could not synthesize a summary this time. The individual perspectives above are still valid.</p></div></div>`;
+  }
+  if(state.consensusStatus !== 'done' || !state.consensusData) return '';
+  const c = state.consensusData;
+  return `<div class="consensus">
+    <div class="consensus-head">
+      <span class="badge"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4M12 18v4M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8M2 12h4M18 12h4M4.9 19.1l2.8-2.8M16.3 7.7l2.8-2.8"/></svg></span>
+      <h3>AI Career Consensus</h3>
+      <span>${c.__demo?'Demo synthesis':'Synthesized from ' + Object.keys(state.currentResponses).length + ' perspectives'}</span>
+    </div>
+    <div class="consensus-grid">
+      <div class="consensus-col"><h4>Where experts agree</h4><ul>${(c.agreements||[]).map(x=>`<li>${escapeHtml(x)}</li>`).join('')}</ul></div>
+      <div class="consensus-col"><h4>Where they differ</h4><ul>${(c.disagreements||[]).map(x=>`<li>${escapeHtml(x)}</li>`).join('')}</ul></div>
+      <div class="consensus-col"><h4>Major advantages</h4><ul>${(c.advantages||[]).map(x=>`<li>${escapeHtml(x)}</li>`).join('')}</ul></div>
+      <div class="consensus-col"><h4>Major risks</h4><ul>${(c.risks||[]).map(x=>`<li>${escapeHtml(x)}</li>`).join('')}</ul></div>
+    </div>
+    <div class="consensus-col" style="margin-bottom:12px;"><h4>Skills to build</h4><ul>${(c.skills||[]).map(x=>`<li>${escapeHtml(x)}</li>`).join('')}</ul></div>
+    <div class="consensus-note"><strong>Recommended next action:</strong> ${escapeHtml(c.nextAction||'')}<br><br>This summary is generated by AI to help you think, not a guarantee of outcomes. Please treat it as a starting point alongside your own research and advice from people who know your specific situation.</div>
+  </div>`;
+}
+
+/* ---------------- CONVERSATION EVENT BINDING ---------------- */
+function bindConversationEvents(){
+  const askAll = $('#askAllBtn');
+  if(askAll) askAll.addEventListener('click', () => {
+    state.selectedPersonas = new Set(PERSONA_KEYS);
+    submitQuestion(state.currentQuestion);
+  });
+  const cmpBtn = $('#compareBtn');
+  if(cmpBtn) cmpBtn.addEventListener('click', openCompareView);
+
+  $$('[data-copy]').forEach(btn => btn.addEventListener('click', () => copyResponse(btn.dataset.copy)));
+  $$('[data-regen]').forEach(btn => btn.addEventListener('click', () => regenerate(btn.dataset.regen)));
+  $$('[data-compare]').forEach(cb => cb.addEventListener('change', () => {
+    const k = cb.dataset.compare;
+    if(cb.checked) state.compareSelection.add(k); else state.compareSelection.delete(k);
+  }));
+  $$('[data-rate]').forEach(btn => btn.addEventListener('click', () => {
+    const k = btn.dataset.rate, val = btn.dataset.val;
+    const r = state.currentResponses[k];
+    r.rating = r.rating === val ? null : val;
+    renderConversation();
+    showToast(val === 'up' ? 'Thanks for the feedback' : 'Feedback noted');
+  }));
+}
+
+function copyResponse(key){
+  const d = state.currentResponses[key].data;
+  const p = PERSONAS[key];
+  const text = `${p.label}\n\nPerspective:\n${d.perspective}\n\nKey Considerations:\n- ${(d.considerations||[]).join('\n- ')}\n\nAdvantages:\n- ${(d.advantages||[]).join('\n- ')}\n\nPossible Concerns:\n- ${(d.concerns||[]).join('\n- ')}\n\nRecommendation:\n${d.recommendation}\n\nNext Steps:\n- ${(d.nextSteps||[]).join('\n- ')}`;
+  navigator.clipboard.writeText(text).then(() => showToast('Response copied')).catch(() => showToast('Could not copy'));
+}
+
+function regenerate(key){
+  state.currentResponses[key] = { status:'loading', data:null, error:null };
+  state.consensusStatus = 'idle';
+  state.consensusData = null;
+  renderConversation();
+  runPersona(key, state.currentQuestion);
+}
+
+/* ============================================================
+   COMPARISON
+=============================================================== */
+function openCompareView(){
+  let keys = Array.from(state.compareSelection).filter(k => state.currentResponses[k] && state.currentResponses[k].status === 'done');
+  if(keys.length < 2){
+    keys = Object.keys(state.currentResponses).filter(k => state.currentResponses[k].status === 'done').slice(0,3);
+  }
+  renderCompareBody(keys);
+  openModal('compareOverlay');
+}
+
+function renderCompareBody(keys){
+  const colsClass = keys.length >= 3 ? 'cols-3' : 'cols-2';
+  const body = $('#compareBody');
+  if(keys.length < 2){
+    body.innerHTML = `<p style="font-size:13px;color:var(--text-dim);">Select at least two completed persona responses (use the "Compare" checkbox on a response card) to see them side by side.</p>`;
+    return;
+  }
+  body.innerHTML = `<div class="compare-wrap ${colsClass}">
+    ${keys.map(k => {
+      const p = PERSONAS[k], d = state.currentResponses[k].data;
+      return `<div class="compare-card" style="--pc:var(${p.color})">
+        <div class="ch"><span class="roster-avatar" style="width:26px;height:26px;background:var(${p.color})"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="13" height="13">${p.icon}</svg></span><strong>${p.label}</strong></div>
+        <div class="cb">
+          <h5>Main viewpoint</h5><p>${escapeHtml(d.perspective)}</p>
+          <h5>Advantages</h5><p>${(d.advantages||[]).join(' &middot; ')}</p>
+          <h5>Concerns</h5><p>${(d.concerns||[]).join(' &middot; ')}</p>
+          <h5>Recommendation</h5><p>${escapeHtml(d.recommendation)}</p>
+          <h5>Suggested action</h5><p>${(d.nextSteps||[])[0] || ''}</p>
+        </div>
+      </div>`;
+    }).join('')}
+  </div>`;
+}
+
+/* ============================================================
+   CHAT HISTORY UI
+=============================================================== */
+function renderHistoryList(){
+  const wrap = $('#historyList');
+  if(!state.history.length){
+    wrap.innerHTML = `<div class="history-empty">No conversations yet</div>`;
+    return;
+  }
+  wrap.innerHTML = state.history.map(h => `
+    <div class="history-item ${h.id===state.currentChatId?'active':''}" data-load="${h.id}" role="button" tabindex="0">
+      ${escapeHtml(h.question)}
+      <span class="history-del" data-del="${h.id}" role="button" aria-label="Delete conversation" tabindex="0">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m2 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6"/></svg>
+      </span>
+    </div>
+  `).join('');
+  wrap.querySelectorAll('[data-load]').forEach(el => {
+    el.addEventListener('click', (e) => {
+      if(e.target.closest('[data-del]')) return;
+      loadHistoryItem(el.dataset.load);
+    });
+  });
+  wrap.querySelectorAll('[data-del]').forEach(el => {
+    el.addEventListener('click', (e) => { e.stopPropagation(); deleteHistoryItem(el.dataset.del); });
+  });
+}
+
+function loadHistoryItem(id){
+  const h = state.history.find(x => x.id === id);
+  if(!h) return;
+  state.currentChatId = h.id;
+  state.currentQuestion = h.question;
+  state.currentResponses = h.responses;
+  state.consensusData = h.consensus;
+  state.consensusStatus = h.consensus ? 'done' : 'idle';
+  state.selectedPersonas = new Set(h.personas);
+  state.compareSelection = new Set();
+  syncPersonaUI();
+  renderConversation();
+  $('#topbarTitle').textContent = h.question.length > 46 ? h.question.slice(0,46) + '…' : h.question;
+  $('#topbarSub').textContent = `${h.personas.length} expert${h.personas.length>1?'s':''} responded`;
+  renderHistoryList();
+  closeSidebar();
+}
+
+function deleteHistoryItem(id){
+  state.history = state.history.filter(h => h.id !== id);
+  saveHistory();
+  if(state.currentChatId === id) newChat();
+  else renderHistoryList();
+  showToast('Conversation deleted');
+}
+
+$('#clearHistoryBtn').addEventListener('click', () => {
+  if(!state.history.length) { showToast('History is already empty'); return; }
+  if(confirm('Clear all chat history? This cannot be undone.')){
+    state.history = [];
+    saveHistory();
+    renderHistoryList();
+    showToast('History cleared');
+  }
+});
+
+/* ============================================================
+   PROFILE MODAL
+=============================================================== */
+function openProfileModal(){
+  const p = state.profile;
+  $('#profEducation').value = p.education || '';
+  $('#profYear').value = p.year || '';
+  $('#profDegree').value = p.degree || '';
+  $('#profBranch').value = p.branch || '';
+  $('#profGoal').value = p.goal || '';
+  $('#profIndustry').value = p.industry || '';
+  renderChipList('profSkillsChips', p.skills, 'skills');
+  renderChipList('profInterestsChips', p.interests, 'interests');
+  openModal('profileOverlay');
+}
+$('#profileBtn').addEventListener('click', () => { openProfileModal(); closeSidebar(); });
+
+function renderChipList(containerId, items, field){
+  const wrap = document.getElementById(containerId);
+  wrap.innerHTML = (items||[]).map((it,i) => `<span class="rmv-chip">${escapeHtml(it)}<button data-rmv="${field}" data-idx="${i}" aria-label="Remove"><svg viewBox="0 0 24 24" fill="none" stroke-width="3" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button></span>`).join('');
+  wrap.querySelectorAll('[data-rmv]').forEach(btn => btn.addEventListener('click', () => {
+    const f = btn.dataset.rmv, idx = +btn.dataset.idx;
+    state.profile[f].splice(idx,1);
+    renderChipList(containerId, state.profile[f], f);
+  }));
+}
+
+function setupChipInput(inputId, containerId, field){
+  const input = document.getElementById(inputId);
+  input.addEventListener('keydown', e => {
+    if(e.key === 'Enter'){
+      e.preventDefault();
+      const val = input.value.trim();
+      if(!val) return;
+      if(!state.profile[field]) state.profile[field] = [];
+      state.profile[field].push(val);
+      input.value = '';
+      renderChipList(containerId, state.profile[field], field);
+    }
+  });
+}
+setupChipInput('profSkillsInput','profSkillsChips','skills');
+setupChipInput('profInterestsInput','profInterestsChips','interests');
+
+$('#saveProfileBtn').addEventListener('click', () => {
+  state.profile.education = $('#profEducation').value;
+  state.profile.year = $('#profYear').value.trim();
+  state.profile.degree = $('#profDegree').value.trim();
+  state.profile.branch = $('#profBranch').value.trim();
+  state.profile.goal = $('#profGoal').value.trim();
+  state.profile.industry = $('#profIndustry').value.trim();
+  saveProfile();
+  closeModal('profileOverlay');
+  showToast('Profile saved');
+});
+$('#clearProfileBtn').addEventListener('click', () => {
+  state.profile = { education:'', year:'', degree:'', branch:'', goal:'', industry:'', skills:[], interests:[] };
+  saveProfile();
+  closeModal('profileOverlay');
+  showToast('Profile cleared');
+});
+
+/* ============================================================
+   SETTINGS MODAL
+=============================================================== */
+function openSettingsModal(){
+  $('#providerSelect').value = state.settings.provider;
+  $('#apiKeyInput').value = state.settings.apiKey;
+  $('#modelInput').value = state.settings.model;
+  $('#demoModeSwitch').classList.toggle('on', state.settings.demoMode);
+  $('#demoModeSwitch').setAttribute('aria-checked', state.settings.demoMode);
+  openModal('settingsOverlay');
+}
+$('#settingsBtn').addEventListener('click', () => { openSettingsModal(); closeSidebar(); });
+$('#demoModeSwitch').addEventListener('click', () => {
+  const sw = $('#demoModeSwitch');
+  const on = !sw.classList.contains('on');
+  sw.classList.toggle('on', on);
+  sw.setAttribute('aria-checked', on);
+});
+$('#saveSettingsBtn').addEventListener('click', () => {
+  state.settings.provider = $('#providerSelect').value;
+  state.settings.apiKey = $('#apiKeyInput').value.trim();
+  state.settings.model = $('#modelInput').value.trim();
+  state.settings.demoMode = $('#demoModeSwitch').classList.contains('on');
+  saveSettings();
+  updateDockFootnote();
+  closeModal('settingsOverlay');
+  showToast('Settings saved');
+});
+
+function updateDockFootnote(){
+  const fn = $('#dockFootnote');
+  if(state.settings.demoMode){
+    fn.textContent = 'Demo Mode is on — responses are simulated. Open Settings to connect a real AI provider.';
+  }else{
+    const providerLabel = state.settings.provider === 'gemini' ? 'Google Gemini' : 'OpenAI';
+    fn.textContent = state.settings.apiKey
+      ? `Connected to ${providerLabel}${state.settings.model ? ' · ' + state.settings.model : ''}`
+      : `${providerLabel} selected — add an API key in Settings, or turn Demo Mode back on.`;
+  }
+}
+
+/* ============================================================
+   PERSONA PICKER MODAL TRIGGER (mobile helper via topbar indicator)
+=============================================================== */
+$('#selectedIndicator').addEventListener('click', () => openModal('personaOverlay'));
+$('#selectedIndicator').style.cursor = 'pointer';
+
+/* ============================================================
+   EVENT LISTENERS — init
+=============================================================== */
+function init(){
+  renderPersonaMiniList();
+  renderPersonaPickerModal();
+  updateSelectedIndicator();
+  renderHistoryList();
+  renderWelcome();
+  updateDockFootnote();
+  updateSendEnabled();
+}
+init();
+</script>
+</body>
+</html>
